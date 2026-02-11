@@ -16,6 +16,34 @@ const level1Button = document.getElementById("level1-button");
 const level2Button = document.getElementById("level2-button");
 const level3Button = document.getElementById("level3-button");
 
+const graduationModal = document.getElementById("graduation-modal");
+const graduationTitle = document.getElementById("graduation-title");
+const graduationBody = document.getElementById("graduation-body");
+const continueButton = document.getElementById("continue-button");
+const resetModalButton = document.getElementById("reset-modal-button");
+
+function showGraduation(messageTitle, messageBody, nextLevel) {
+  graduationTitle.textContent = messageTitle;
+  graduationBody.textContent = messageBody;
+  graduationModal.classList.remove("hidden");
+
+  continueButton.onclick = () => {
+    graduationModal.classList.add("hidden");
+    if (nextLevel) {
+      currentLevel = nextLevel;
+    }
+    resetGame();
+  };
+
+  resetModalButton.onclick = () => {
+    graduationModal.classList.add("hidden");
+    currentLevel = 1;
+    highestUnlockedLevel = 1;
+    resetGame();
+  };
+}
+
+
 // Core state
 let score = 0;
 let currentItem = null;
@@ -468,23 +496,47 @@ function checkAnswer(zone) {
     ? 0
     : Math.round((correctDecisions / totalDecisions) * 100);
 
-  // Graduation rules
-  // Unlock Level 2 from Level 1
+  // Graduation rules with notifications
+
+  // Level 1 -> Level 2
   if (currentLevel === 1 && highestUnlockedLevel === 1) {
     const minDecisions = 20;
     const minAccuracy = 80;
     if (totalDecisions >= minDecisions && accuracy >= minAccuracy) {
       highestUnlockedLevel = 2;
+      updateLevelButtons();
+      showGraduation(
+        "Level 1 cleared – Level 2 unlocked",
+        `Great work.\n\nAccuracy: ${accuracy}%\nItems answered: ${totalDecisions}\nScore: ${score}`,
+        2 // jump to Level 2 on Continue
+      );
     }
   }
-  // Unlock Level 3 from Level 2
+
+  // Level 2 -> Level 3
   if (currentLevel === 2 && highestUnlockedLevel === 2) {
     const minDecisions2 = 30;
     const minAccuracy2 = 85;
     if (totalDecisions >= minDecisions2 && accuracy >= minAccuracy2) {
       highestUnlockedLevel = 3;
+      updateLevelButtons();
+      showGraduation(
+        "Level 2 cleared – Level 3 unlocked",
+        `Strong performance.\n\nAccuracy: ${accuracy}%\nItems answered: ${totalDecisions}\nScore: ${score}`,
+        3 // jump to Level 3 on Continue
+      );
     }
   }
+
+  // All levels cleared – only when playing Level 3
+  if (currentLevel === 3 && totalDecisions >= 30 && accuracy >= 90) {
+    showGraduation(
+      "All levels cleared",
+      `You have completed Level 3.\n\nAccuracy: ${accuracy}%\nItems answered: ${totalDecisions}\nScore: ${score}\nBest streak: ${currentStreak}`,
+      null // stay on Level 3, Continue just restarts same level
+    );
+  }
+
 
   updateLevelButtons();
 
