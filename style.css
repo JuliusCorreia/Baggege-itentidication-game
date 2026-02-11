@@ -17,15 +17,15 @@ body {
 
 /* App shell – glassy card */
 .app-shell {
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 16px;
   box-shadow:
-    0 28px 60px rgba(15, 23, 42, 0.25),
-    0 0 0 1px rgba(148, 163, 184, 0.35);
-  max-width: 1120px;
+    0 10px 30px rgba(15, 23, 42, 0.18);
+  max-width: 960px;
   width: 100%;
-  padding: 18px 22px 22px;
-  backdrop-filter: blur(22px);
+  margin: 0 auto;              /* centre on large screens */
+  padding: 12px 10px 14px;      /* tighter for mobile */
+  backdrop-filter: blur(18px);
 }
 
 /* Header */
@@ -54,6 +54,7 @@ body {
   justify-content: space-between;
   gap: 12px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 /* Level switcher */
@@ -277,25 +278,38 @@ body {
 /* Responsive tweaks */
 @media (max-width: 768px) {
   .app-shell {
-    padding: 14px 14px 18px;
-    border-radius: 20px;
+    padding: 10px 8px 12px;
+    border-radius: 14px;
   }
 
   .app-header h1 {
-    font-size: 18px;
+    font-size: 17px;
   }
 
-  .status-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  #game-canvas {
-    height: auto;
+  .app-header p {
+    font-size: 12px;
   }
 
   .header-top {
     flex-direction: column;
     align-items: flex-start;
+    gap: 8px;
+  }
+
+  .status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  #status-text {
+    min-width: auto;
+  }
+
+  #game-canvas {
+    min-height: 260px;
+    max-height: 420px;
   }
 }
+
