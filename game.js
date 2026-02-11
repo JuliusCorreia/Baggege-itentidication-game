@@ -15,42 +15,47 @@ let dragOffsetX = 0;
 let dragOffsetY = 0;
 
 // --- Zones (we'll keep them simple rectangles for now) ---
+// --- Trays (drop zones) ---
 const zones = [
   {
     id: "cabin",
-    label: "Cabin OK",
+    label: "Cabin & hold allowed",
+    icon: "🛄",                // placeholder icon
     x: 40,
     y: 360,
-    width: 180,
+    width: 190,
     height: 100,
-    color: "#2ecc71"
+    baseColor: "#e5f9ed"
   },
   {
     id: "hold-only",
     label: "Hold only",
+    icon: "📦",
     x: 260,
     y: 360,
-    width: 180,
+    width: 190,
     height: 100,
-    color: "#f1c40f"
+    baseColor: "#fef7e5"
   },
   {
     id: "not-allowed-dangerous",
     label: "Dangerous goods",
+    icon: "☢",
     x: 480,
     y: 360,
-    width: 180,
+    width: 190,
     height: 100,
-    color: "#e74c3c"
+    baseColor: "#fee2e2"
   },
   {
     id: "not-allowed-offensive",
-    label: "Offensive weapon",
+    label: "Offensive weapons",
+    icon: "⚠",
     x: 700,
     y: 360,
-    width: 180,
+    width: 190,
     height: 100,
-    color: "#8e44ad"
+    baseColor: "#ede9fe"
   }
 ];
 
@@ -86,18 +91,55 @@ function drawBackground() {
 
 function drawZones() {
   zones.forEach((zone) => {
-    ctx.fillStyle = zone.color;
-    ctx.globalAlpha = 0.16;
-    ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+    // Tray base
+    const r = 14;
+    const x = zone.x;
+    const y = zone.y;
+    const w = zone.width;
+    const h = zone.height;
 
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = zone.color;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+    // Tray fill
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "14px system-ui";
-    ctx.fillText(zone.label, zone.x + 10, zone.y + 24);
+    ctx.fillStyle = zone.baseColor;
+    ctx.fill();
+
+    // Outer shadow
+    ctx.shadowColor = "rgba(15, 23, 42, 0.35)";
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+    ctx.strokeStyle = "rgba(148, 163, 184, 0.9)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Inner lip (like a tray edge)
+    ctx.beginPath();
+    ctx.moveTo(x + 4, y + 6);
+    ctx.lineTo(x + w - 4, y + 6);
+    ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Icon + label
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "18px system-ui";
+    ctx.fillText(zone.icon, x + 10, y + 28);
+
+    ctx.font = "12px system-ui";
+    ctx.fillStyle = "#111827";
+    ctx.fillText(zone.label, x + 40, y + 26);
   });
 }
 
