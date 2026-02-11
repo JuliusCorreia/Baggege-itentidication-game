@@ -10,27 +10,19 @@
   <div class="app-shell">
     <header class="app-header">
       <h1>Baggage Screening Trainer</h1>
-      <p>Drag each item to the correct zone: Cabin, Hold only, Dangerous goods, Offensive weapon.</p>
+      <p>Drag each item to the correct tray: Cabin & hold allowed, Hold only, Dangerous goods, Offensive weapons.</p>
     </header>
 
     <main class="game-layout">
       <!-- STATUS BAR AT THE TOP -->
       <div class="status-bar">
-        <span id="status-text">Drag the item into the correct zone.</span>
+        <span id="status-text">Drag the item into the correct tray.</span>
         <span id="score-text">Score: 0</span>
         <span id="level-text">Level 1</span>
       </div>
 
       <!-- CANVAS IN THE MIDDLE -->
       <canvas id="game-canvas" width="900" height="500"></canvas>
-
-      <!-- LEGEND UNDER THE CANVAS -->
-      <div class="zones-legend">
-        <div class="zone-label zone-cabin">Cabin OK</div>
-        <div class="zone-label zone-hold">Hold only</div>
-        <div class="zone-label zone-dangerous">Not allowed – Dangerous goods</div>
-        <div class="zone-label zone-offensive">Not allowed – Offensive weapon</div>
-      </div>
     </main>
   </div>
 
