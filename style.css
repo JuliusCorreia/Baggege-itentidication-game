@@ -209,6 +209,68 @@ body {
   cursor: default;
 }
 
+/* Graduation / stats modal */
+.modal.hidden {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 18px 20px 16px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.4);
+}
+
+.modal-content h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.modal-content p {
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 12px;
+  white-space: pre-line; /* so \n in JS show as line breaks */
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-buttons .primary,
+.modal-buttons .secondary {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.modal-buttons .primary {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #f9fafb;
+}
+
+.modal-buttons .secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
 /* Responsive tweaks */
 @media (max-width: 768px) {
   .app-shell {
