@@ -50,6 +50,42 @@ body {
   color: #6b7280;
 }
 
+/* Header layout */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+/* Level switcher */
+.level-switcher {
+  display: flex;
+  gap: 6px;
+}
+
+.level-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  background: #f9fafb;
+  color: #0f172a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.level-btn-active {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #f9fafb;
+  border-color: transparent;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.4);
+}
+
+.level-btn-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* Layout */
 .game-layout {
   margin-top: 10px;
@@ -81,6 +117,13 @@ body {
   white-space: nowrap;
 }
 
+/* Extra status labels (items, streak) */
+#items-text,
+#streak-text {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* Canvas – x-ray lane look */
 #game-canvas {
   width: 100%;
@@ -91,7 +134,7 @@ body {
   display: block;
 }
 
-/* Zones legend – compact chips */
+/* Zones legend – compact chips (if you render them from JS) */
 .zones-legend {
   display: flex;
   flex-wrap: wrap;
@@ -133,6 +176,39 @@ body {
   background: #8b5cf6;
 }
 
+/* Controls bar */
+.controls-bar {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+#next-button,
+#reset-button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #f9fafb;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
+}
+
+#reset-button {
+  background: #e5e7eb;
+  color: #111827;
+  box-shadow: none;
+}
+
+#next-button:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: default;
+}
+
 /* Responsive tweaks */
 @media (max-width: 768px) {
   .app-shell {
@@ -152,62 +228,9 @@ body {
   #game-canvas {
     height: auto;
   }
-}
-.controls-bar {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-end;
-}
 
-#next-button {
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: none;
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: #f9fafb;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
-
-#next-button:disabled {
-  opacity: 0.45;
-  box-shadow: none;
-  cursor: default;
-}
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.level-switcher {
-  display: flex;
-  gap: 6px;
-}
-
-.level-btn {
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.8);
-  background: #f9fafb;
-  color: #0f172a;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.level-btn-active {
-  background: linear-gradient(135deg, #0ea5e9, #2563eb);
-  color: #f9fafb;
-  border-color: transparent;
-  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.4);
-}
-
-.level-btn-disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-
