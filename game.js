@@ -15,6 +15,10 @@ let dragOffsetX = 0;
 let dragOffsetY = 0;
 let lastResult = null; // { correct: boolean, delta: number }
 
+// Timing and accuracy
+let startTime = null;        // when current item became active
+let totalDecisions = 0;      // how many items answered
+let correctDecisions = 0;    // how many correct
 
 // --- Zones (we'll keep them simple rectangles for now) ---
 // --- Trays (drop zones) ---
@@ -332,41 +336,58 @@ function handlePointerUp(event) {
 
 // --- Answer checking & game state ---
 function checkAnswer(zone) {
+  const now = performance.now();
+  const timeTakenSeconds = startTime ? (now - startTime) / 1000 : 0;
+
   const correctCategory = currentItem.category;
   const droppedCategory = zone.id;
 
-  const niceZoneLabel = zone.label;
-  let message;
   let delta;
+  let wasCorrect;
 
   if (correctCategory === droppedCategory) {
     delta = 10;
     score += delta;
-    message = `Correct ✔  ${currentItem.name} belongs in "${niceZoneLabel}".`;
-    lastResult = { correct: true, delta };
+    wasCorrect = true;
+    correctDecisions += 1;
   } else {
     delta = -5;
     score += delta;
-    const correctZone = zones.find(z => z.id === correctCategory);
-    const correctLabel = correctZone ? correctZone.label : correctCategory;
-    message = `Wrong ✖  ${currentItem.name} should be "${correctLabel}", not "${niceZoneLabel}".`;
-    lastResult = { correct: false, delta };
+    wasCorrect = false;
   }
 
-  statusText.textContent = message;
+  totalDecisions += 1;
+  const accuracy = totalDecisions === 0
+    ? 0
+    : Math.round((correctDecisions / totalDecisions) * 100);
+
+  // Store result for drawing outline + pill on THIS item
+  lastResult = { correct: wasCorrect, delta };
+
+  // TOP BAR now shows time + accuracy, not right/wrong text
+  const timeText = `Time: ${timeTakenSeconds.toFixed(1)}s`;
+  const accuracyText = `Accuracy: ${accuracy}%`;
+  statusText.textContent = `${timeText}  •  ${accuracyText}`;
+
   scoreText.textContent = `Score: ${score}`;
 
-  // Load next item
+  // Prepare next item and restart timer
   currentItem = createRandomItem();
+  startTime = performance.now();
 }
-
 
 // --- Initialise ---
 function initGame() {
   score = 0;
+  totalDecisions = 0;
+  correctDecisions = 0;
+  lastResult = null;
   levelText.textContent = "Level 1";
+
   currentItem = createRandomItem();
-  statusText.textContent = `Drag the item into the correct zone.`;
+  startTime = performance.now(); // start timer for first item
+
+  statusText.textContent = `Time: 0.0s  •  Accuracy: 0%`;
   scoreText.textContent = `Score: ${score}`;
 }
 
