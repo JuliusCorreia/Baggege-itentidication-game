@@ -130,6 +130,7 @@ function createRandomItem() {
     category: itemData.category,
     hazardType: itemData.hazardType,
     level: itemData.level,
+    icon: itemData.icon,
     x: startX,
     y: startY,
     width,
@@ -284,19 +285,26 @@ function drawItem(item) {
     ctx.textBaseline = "alphabetic";
   }
 
-   // Item text: name
+  // Icon (if present)
+  if (item.icon) {
+    ctx.fillStyle = "#f9fafb";
+    ctx.font = "22px system-ui";
+    ctx.fillText(item.icon, x + 14, y + 30);
+  }
+
+  // Item text: name
+  const textStartX = item.icon ? x + 50 : x + 14;
   ctx.fillStyle = "#ecf0f1";
   ctx.font = "16px system-ui";
-  wrapText(item.name, x + 14, y + 26, w - 28, 20);
+  wrapText(item.name, textStartX, y + 26, w - (textStartX - x) - 14, 20);
 
   // Item text: hazard type (smaller, secondary)
   if (item.hazardType) {
     ctx.fillStyle = "rgba(226, 232, 240, 0.9)";
     ctx.font = "12px system-ui";
-    ctx.fillText(`Hazard: ${item.hazardType}`, x + 14, y + h - 12);
+    ctx.fillText(`Hazard: ${item.hazardType}`, textStartX, y + h - 12);
   }
 }
-
 
 // Simple multi-line text wrapper
 function wrapText(text, x, y, maxWidth, lineHeight) {
