@@ -16,14 +16,20 @@
     <main class="game-layout">
       <!-- STATUS BAR AT THE TOP -->
       <div class="status-bar">
-        <span id="status-text">Drag the item into the correct tray.</span>
+        <span id="status-text">Time: 0.0s  •  Accuracy: 0%</span>
         <span id="score-text">Score: 0</span>
         <span id="level-text">Level 1</span>
       </div>
 
       <!-- CANVAS IN THE MIDDLE -->
       <canvas id="game-canvas" width="900" height="500"></canvas>
+
+      <!-- CONTROLS BELOW -->
+      <div class="controls-bar">
+        <button id="next-button">Next item</button>
+      </div>
     </main>
+
   </div>
 
   <script src="items.js"></script>
