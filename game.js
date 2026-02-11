@@ -21,6 +21,10 @@ let startTime = null;        // when current item became active
 let totalDecisions = 0;      // how many items answered
 let correctDecisions = 0;    // how many correct
 
+// Levels
+let currentLevel = 1;        // which level is being played
+let highestUnlockedLevel = 1; // how far the user has progressed
+
 // Game state: "answering" or "feedback"
 let gameState = "answering";
 
@@ -75,7 +79,13 @@ const zones = [
 
 // --- Simple item representation for now ---
 function createRandomItem() {
-  const itemData = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+  // Filter items by current level
+  const pool = ITEMS.filter(item => item.level === currentLevel);
+
+  // Safety fallback: if no items for this level, use all items
+  const effectivePool = pool.length > 0 ? pool : ITEMS;
+
+  const itemData = effectivePool[Math.floor(Math.random() * effectivePool.length)];
 
   const width = 280;
   const height = 80;
@@ -90,6 +100,8 @@ function createRandomItem() {
   return {
     name: itemData.name,
     category: itemData.category,
+    hazardType: itemData.hazardType,
+    level: itemData.level,
     x: startX,
     y: startY,
     width,
@@ -97,7 +109,6 @@ function createRandomItem() {
     color: "#16a085"
   };
 }
-
 
 // --- Drawing functions ---
 function drawBackground() {
@@ -429,7 +440,7 @@ function initGame() {
   correctDecisions = 0;
   lastResult = null;
   gameState = "answering";
-  levelText.textContent = "Level 1";
+  levelText.textContent = `Level ${currentLevel}`;
 
   currentItem = createRandomItem();
   startTime = performance.now(); // start timer for first item
