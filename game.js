@@ -7,6 +7,7 @@ const ctx = canvas.getContext("2d");
 const statusText = document.getElementById("status-text");
 const scoreText = document.getElementById("score-text");
 const levelText = document.getElementById("level-text");
+const nextButton = document.getElementById("next-button");
 
 let score = 0;
 let currentItem = null;
@@ -19,6 +20,10 @@ let lastResult = null; // { correct: boolean, delta: number }
 let startTime = null;        // when current item became active
 let totalDecisions = 0;      // how many items answered
 let correctDecisions = 0;    // how many correct
+
+// Game state: "answering" or "feedback"
+let gameState = "answering";
+
 
 // --- Zones (we'll keep them simple rectangles for now) ---
 // --- Trays (drop zones) ---
@@ -293,7 +298,7 @@ function isPointInItem(x, y, item) {
 }
 
 function handlePointerDown(event) {
-  if (!currentItem) return;
+  if (!currentItem || gameState !== "answering") return;
   const { x, y } = getCanvasPoint(event);
 
   if (isPointInItem(x, y, currentItem)) {
@@ -336,6 +341,8 @@ function handlePointerUp(event) {
 
 // --- Answer checking & game state ---
 function checkAnswer(zone) {
+  if (gameState !== "answering") return;
+
   const now = performance.now();
   const timeTakenSeconds = startTime ? (now - startTime) / 1000 : 0;
 
@@ -364,16 +371,35 @@ function checkAnswer(zone) {
   // Store result for drawing outline + pill on THIS item
   lastResult = { correct: wasCorrect, delta };
 
-  // TOP BAR now shows time + accuracy, not right/wrong text
+  // TOP BAR shows time + accuracy
   const timeText = `Time: ${timeTakenSeconds.toFixed(1)}s`;
   const accuracyText = `Accuracy: ${accuracy}%`;
   statusText.textContent = `${timeText}  •  ${accuracyText}`;
 
   scoreText.textContent = `Score: ${score}`;
 
-  // Prepare next item and restart timer
+  // Switch to feedback state: item locked, show pill/outline, wait for Next
+  gameState = "feedback";
+  nextButton.disabled = false;
+}
+function goToNextItem() {
+  if (gameState !== "feedback") return;
+
+  // Clear last result so pill/outline disappears on new item
+  lastResult = null;
+
+  // Spawn next item and reset timer
   currentItem = createRandomItem();
   startTime = performance.now();
+  gameState = "answering";
+  nextButton.disabled = true;
+
+  // Reset time display (accuracy remains)
+  statusText.textContent = `Time: 0.0s  •  Accuracy: ${
+    totalDecisions === 0
+      ? 0
+      : Math.round((correctDecisions / totalDecisions) * 100)
+  }%`;
 }
 
 // --- Initialise ---
@@ -382,6 +408,7 @@ function initGame() {
   totalDecisions = 0;
   correctDecisions = 0;
   lastResult = null;
+  gameState = "answering";
   levelText.textContent = "Level 1";
 
   currentItem = createRandomItem();
@@ -389,6 +416,7 @@ function initGame() {
 
   statusText.textContent = `Time: 0.0s  •  Accuracy: 0%`;
   scoreText.textContent = `Score: ${score}`;
+  nextButton.disabled = true; // can't go next until you answer
 }
 
 canvas.addEventListener("mousedown", handlePointerDown);
@@ -400,6 +428,7 @@ canvas.addEventListener("mouseleave", handlePointerUp);
 canvas.addEventListener("touchstart", handlePointerDown, { passive: false });
 canvas.addEventListener("touchmove", handlePointerMove, { passive: false });
 canvas.addEventListener("touchend", handlePointerUp, { passive: false });
+nextButton.addEventListener("click", goToNextItem);
 
 initGame();
 render();
