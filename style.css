@@ -176,4 +176,38 @@ body {
   box-shadow: none;
   cursor: default;
 }
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.level-switcher {
+  display: flex;
+  gap: 6px;
+}
+
+.level-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  background: #f9fafb;
+  color: #0f172a;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.level-btn-active {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #f9fafb;
+  border-color: transparent;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.4);
+}
+
+.level-btn-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 
