@@ -227,10 +227,17 @@ function drawItem(item) {
     ctx.textBaseline = "alphabetic";
   }
 
-  // Item text
+   // Item text: name
   ctx.fillStyle = "#ecf0f1";
   ctx.font = "16px system-ui";
   wrapText(item.name, x + 14, y + 26, w - 28, 20);
+
+  // Item text: hazard type (smaller, secondary)
+  if (item.hazardType) {
+    ctx.fillStyle = "rgba(226, 232, 240, 0.9)";
+    ctx.font = "12px system-ui";
+    ctx.fillText(`Hazard: ${item.hazardType}`, x + 14, y + h - 12);
+  }
 }
 
 
