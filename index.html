@@ -12,11 +12,14 @@
       <div class="header-top">
         <div>
           <h1>Baggage Screening Trainer</h1>
-          <p>Drag each item to the correct tray: Cabin & hold allowed, Hold only, Dangerous goods, Offensive weapons.</p>
+          <p>
+            Drag each item to the correct tray: Cabin, Hold only, Dangerous goods, Offensive weapons.
+          </p>
         </div>
         <div class="level-switcher">
-          <button id="level1-button" class="level-btn level-btn-active">Level 1</button>
-          <button id="level2-button" class="level-btn level-btn-disabled">Level 2</button>
+          <button id="level1-button" class="level-btn level-btn-active" data-level="1">Level 1</button>
+          <button id="level2-button" class="level-btn level-btn-disabled" data-level="2">Level 2</button>
+          <button id="level3-button" class="level-btn level-btn-disabled" data-level="3">Level 3</button>
         </div>
       </div>
     </header>
@@ -26,18 +29,26 @@
       <div class="status-bar">
         <span id="status-text">Time: 0.0s  •  Accuracy: 0%</span>
         <span id="score-text">Score: 0</span>
+        <span id="items-text">Items: 0</span>
+        <span id="streak-text">Streak: 0</span>
         <span id="level-text">Level 1</span>
       </div>
 
-      <!-- CANVAS IN THE MIDDLE -->
+      <!-- CANVAS AREA (GAME BOARD) -->
+      <!-- game.js will draw the current item and the four trays representing:
+           - cabin
+           - hold-only
+           - not-allowed-dangerous
+           - not-allowed-offensive
+           using the ITEMS array from items.js. -->
       <canvas id="game-canvas" width="900" height="500"></canvas>
 
       <!-- CONTROLS BELOW -->
       <div class="controls-bar">
         <button id="next-button">Next item</button>
+        <button id="reset-button">Reset</button>
       </div>
     </main>
-
   </div>
 
   <script src="items.js"></script>
