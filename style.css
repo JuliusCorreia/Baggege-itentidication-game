@@ -153,3 +153,27 @@ body {
     height: auto;
   }
 }
+.controls-bar {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#next-button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #f9fafb;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
+}
+
+#next-button:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: default;
+}
+
