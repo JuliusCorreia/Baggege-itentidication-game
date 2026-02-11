@@ -223,13 +223,20 @@ function checkAnswer(zone) {
   const correctCategory = currentItem.category;
   const droppedCategory = zone.id;
 
+  const niceZoneLabel = zone.label;
+  let message;
+
   if (correctCategory === droppedCategory) {
     score += 10;
-    statusText.textContent = `✅ Correct: ${currentItem.name} belongs in "${zone.label}".`;
+    message = `Correct ✔  ${currentItem.name} belongs in "${niceZoneLabel}".`;
   } else {
     score -= 5;
-    statusText.textContent = `❌ Wrong: ${currentItem.name} is not "${zone.label}".`;
+    const correctZone = zones.find(z => z.id === correctCategory);
+    const correctLabel = correctZone ? correctZone.label : correctCategory;
+    message = `Wrong ✖  ${currentItem.name} should be "${correctLabel}", not "${niceZoneLabel}".`;
   }
+
+  statusText.textContent = message;
   scoreText.textContent = `Score: ${score}`;
 
   // Load next item
