@@ -30,6 +30,14 @@ let highestUnlockedLevel = 1; // how far the user has progressed
 // Game state: "answering" or "feedback"
 let gameState = "answering";
 
+// Per-category stats
+const stats = {
+  cabin: { correct: 0, total: 0 },
+  "hold-only": { correct: 0, total: 0 },
+  "not-allowed-dangerous": { correct: 0, total: 0 },
+  "not-allowed-offensive": { correct: 0, total: 0 }
+};
+
 function updateLevelButtons() {
   // Reset classes
   level1Button.classList.remove("level-btn-active", "level-btn-disabled");
@@ -430,10 +438,19 @@ function checkAnswer(zone) {
     wasCorrect = false;
   }
 
+  // Update per-category stats (by true category)
+  if (stats[correctCategory]) {
+    stats[correctCategory].total += 1;
+    if (wasCorrect) {
+      stats[correctCategory].correct += 1;
+    }
+  }
+
   totalDecisions += 1;
   const accuracy = totalDecisions === 0
     ? 0
     : Math.round((correctDecisions / totalDecisions) * 100);
+
 
   // Graduation rule: unlock Level 2 when performance is good enough
   if (currentLevel === 1 && highestUnlockedLevel === 1) {
@@ -452,7 +469,17 @@ function checkAnswer(zone) {
   // TOP BAR shows time + accuracy
   const timeText = `Time: ${timeTakenSeconds.toFixed(1)}s`;
   const accuracyText = `Accuracy: ${accuracy}%`;
-  statusText.textContent = `${timeText}  •  ${accuracyText}`;
+
+  // Per-category accuracy (simple, integer %)
+  function pct(cat) {
+    const s = stats[cat];
+    if (!s || s.total === 0) return 0;
+    return Math.round((s.correct / s.total) * 100);
+  }
+
+  const catSummary = `Cabin ${pct("cabin")}% · Hold ${pct("hold-only")}% · Dangerous ${pct("not-allowed-dangerous")}% · Offensive ${pct("not-allowed-offensive")}%`;
+
+  statusText.textContent = `${timeText}  •  ${accuracyText}  •  ${catSummary}`;
 
   scoreText.textContent = `Score: ${score}`;
 
@@ -489,7 +516,13 @@ function initGame() {
   lastResult = null;
   gameState = "answering";
 
-  updateLevelButtons();
+  // Reset per-category stats
+  stats.cabin.correct = 0; stats.cabin.total = 0;
+  stats["hold-only"].correct = 0; stats["hold-only"].total = 0;
+  stats["not-allowed-dangerous"].correct = 0; stats["not-allowed-dangerous"].total = 0;
+  stats["not-allowed-offensive"].correct = 0; stats["not-allowed-offensive"].total = 0;
+
+   updateLevelButtons();
 
   currentItem = createRandomItem();
   startTime = performance.now(); // start timer for first item
