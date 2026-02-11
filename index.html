@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Baggage Screening Trainer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1>Baggage Screening Trainer</h1>
+      <p>Drag each item to the correct zone: Cabin, Hold only, Dangerous goods, Offensive weapon.</p>
+    </header>
+
+    <main class="game-layout">
+      <canvas id="game-canvas" width="900" height="500"></canvas>
+
+      <div class="zones-legend">
+        <div class="zone-label zone-cabin">Cabin OK</div>
+        <div class="zone-label zone-hold">Hold only</div>
+        <div class="zone-label zone-dangerous">Not allowed – Dangerous goods</div>
+        <div class="zone-label zone-offensive">Not allowed – Offensive weapon</div>
+      </div>
+
+      <div class="status-bar">
+        <span id="status-text">Loading game…</span>
+        <span id="score-text">Score: 0</span>
+        <span id="level-text">Level 1</span>
+      </div>
+    </main>
+  </div>
+
+  <script src="items.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
