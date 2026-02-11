@@ -128,7 +128,7 @@ const zones = [
     x: 0.03,
     y: 0.70,
     width: 0.22,
-    height: 0.22,
+    height: 0.25,
     baseColor: "#e5f9ed"
   },
   {
@@ -138,7 +138,7 @@ const zones = [
     x: 0.28,
     y: 0.70,
     width: 0.22,
-    height: 0.22,
+    height: 0.25,
     baseColor: "#fef7e5"
   },
   {
@@ -148,7 +148,7 @@ const zones = [
     x: 0.53,
     y: 0.70,
     width: 0.22,
-    height: 0.22,
+    height: 0.25,
     baseColor: "#fee2e2"
   },
   {
@@ -158,7 +158,7 @@ const zones = [
     x: 0.78,
     y: 0.70,
     width: 0.22,
-    height: 0.22,
+    height: 0.25,
     baseColor: "#ede9fe"
   }
 ];
@@ -183,7 +183,7 @@ function createRandomItem() {
   }
 
   const cardWidth = canvas.width * 0.55;   // 55% of width
-  const cardHeight = canvas.height * 0.18; // 18% of height
+  const cardHeight = canvas.height * 0.22; // 22% of height
   const targetX = (canvas.width - cardWidth) / 2;
   const startY = canvas.height * 0.30;
   const startX = -cardWidth;
@@ -259,12 +259,12 @@ function drawZones() {
     ctx.stroke();
 
     ctx.fillStyle = "#0f172a";
-    ctx.font = "18px system-ui";
-    ctx.fillText(zone.icon, x + 10, y + 28);
+    ctx.font = "22px system-ui";       // bigger icon
+    ctx.fillText(zone.icon, x + 10, y + 30);
 
-    ctx.font = "12px system-ui";
+    ctx.font = "13px system-ui";       // slightly bigger label
     ctx.fillStyle = "#111827";
-    ctx.fillText(zone.label, x + 40, y + 26);
+    ctx.fillText(zone.label, x + 44, y + 28);
   });
 }
 
@@ -359,13 +359,13 @@ function drawItem(item) {
 
   if (item.icon) {
     ctx.fillStyle = "#f9fafb";
-    ctx.font = "22px system-ui";
-    ctx.fillText(item.icon, x + 14, y + 30);
+    ctx.font = "26px system-ui";       // bigger icon on card
+    ctx.fillText(item.icon, x + 16, y + 34);
   }
 
-  const textStartX = item.icon ? x + 50 : x + 14;
+  const textStartX = item.icon ? x + 56 : x + 16;
   ctx.fillStyle = "#ecf0f1";
-  ctx.font = "16px system-ui";
+  ctx.font = "17px system-ui";        // bigger main text
   wrapText(item.name, textStartX, y + 26, w - (textStartX - x) - 14, 20);
 
   if (item.hazardType) {
