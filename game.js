@@ -8,6 +8,8 @@ const statusText = document.getElementById("status-text");
 const scoreText = document.getElementById("score-text");
 const levelText = document.getElementById("level-text");
 const nextButton = document.getElementById("next-button");
+const level1Button = document.getElementById("level1-button");
+const level2Button = document.getElementById("level2-button");
 
 let score = 0;
 let currentItem = null;
@@ -27,6 +29,32 @@ let highestUnlockedLevel = 1; // how far the user has progressed
 
 // Game state: "answering" or "feedback"
 let gameState = "answering";
+
+function updateLevelButtons() {
+  // Reset classes
+  level1Button.classList.remove("level-btn-active", "level-btn-disabled");
+  level2Button.classList.remove("level-btn-active", "level-btn-disabled");
+
+  if (currentLevel === 1) {
+    level1Button.classList.add("level-btn-active");
+    level2Button.classList.add(
+      highestUnlockedLevel >= 2 ? "" : "level-btn-disabled"
+    );
+    if (highestUnlockedLevel < 2) {
+      level2Button.classList.add("level-btn-disabled");
+    }
+  } else if (currentLevel === 2) {
+    level2Button.classList.add("level-btn-active");
+    if (highestUnlockedLevel < 2) {
+      level2Button.classList.add("level-btn-disabled");
+    }
+    level1Button.classList.add("level-btn"); // stay clickable
+  }
+
+  // Update label text
+  levelText.textContent = `Level ${currentLevel}`;
+}
+
 
 // Animation
 let itemTargetX = null; // where the item wants to be
@@ -399,6 +427,17 @@ function checkAnswer(zone) {
     ? 0
     : Math.round((correctDecisions / totalDecisions) * 100);
 
+  // Graduation rule: unlock Level 2 when performance is good enough
+  if (currentLevel === 1 && highestUnlockedLevel === 1) {
+    const minDecisions = 20;
+    const minAccuracy = 80;
+    if (totalDecisions >= minDecisions && accuracy >= minAccuracy) {
+      highestUnlockedLevel = 2;
+      currentLevel = 2;
+      updateLevelButtons();
+    }
+  }
+
   // Store result for drawing outline + pill on THIS item
   lastResult = { correct: wasCorrect, delta };
 
@@ -412,6 +451,7 @@ function checkAnswer(zone) {
   // Switch to feedback state: item locked, show pill/outline, wait for Next
   gameState = "feedback";
   nextButton.disabled = false;
+
 }
 function goToNextItem() {
   if (gameState !== "feedback") return;
@@ -440,7 +480,8 @@ function initGame() {
   correctDecisions = 0;
   lastResult = null;
   gameState = "answering";
-  levelText.textContent = `Level ${currentLevel}`;
+
+  updateLevelButtons();
 
   currentItem = createRandomItem();
   startTime = performance.now(); // start timer for first item
@@ -460,6 +501,24 @@ canvas.addEventListener("touchstart", handlePointerDown, { passive: false });
 canvas.addEventListener("touchmove", handlePointerMove, { passive: false });
 canvas.addEventListener("touchend", handlePointerUp, { passive: false });
 nextButton.addEventListener("click", goToNextItem);
+
+level1Button.addEventListener("click", () => {
+  if (currentLevel === 1 || gameState !== "answering") return;
+  currentLevel = 1;
+  updateLevelButtons();
+  // Restart with Level 1 items
+  initGame();
+});
+
+level2Button.addEventListener("click", () => {
+  if (highestUnlockedLevel < 2) return; // not unlocked yet
+  if (currentLevel === 2 || gameState !== "answering") return;
+  currentLevel = 2;
+  updateLevelButtons();
+  // Restart with Level 2 items
+  initGame();
+});
+
 
 initGame();
 render();
