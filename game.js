@@ -13,6 +13,8 @@ let currentItem = null;
 let isDragging = false;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let lastResult = null; // { correct: boolean, delta: number }
+
 
 // --- Zones (we'll keep them simple rectangles for now) ---
 // --- Trays (drop zones) ---
@@ -146,14 +148,14 @@ function drawZones() {
 function drawItem(item) {
   if (!item) return;
 
-  ctx.fillStyle = item.color;
-  ctx.beginPath();
   const r = 16;
   const x = item.x;
   const y = item.y;
   const w = item.width;
   const h = item.height;
-  // rounded rectangle
+
+  // Item background
+  ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
   ctx.quadraticCurveTo(x + w, y, x + w, y + r);
@@ -164,12 +166,73 @@ function drawItem(item) {
   ctx.lineTo(x, y + r);
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
+
+  ctx.fillStyle = item.color;
   ctx.fill();
 
+  // Base outline
+  ctx.strokeStyle = "rgba(15, 23, 42, 0.6)";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Correct / wrong highlight
+  if (lastResult) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = lastResult.correct ? "#22c55e" : "#ef4444";
+    ctx.stroke();
+    ctx.restore();
+
+    // Score change pill
+    const pillText = (lastResult.delta > 0 ? "+" : "") + String(lastResult.delta);
+    const pillWidth = 40;
+    const pillHeight = 20;
+    const pillX = x + w - pillWidth - 10;
+    const pillY = y - pillHeight - 6;
+
+    ctx.beginPath();
+    const pr = pillHeight / 2;
+    ctx.moveTo(pillX + pr, pillY);
+    ctx.lineTo(pillX + pillWidth - pr, pillY);
+    ctx.quadraticCurveTo(pillX + pillWidth, pillY, pillX + pillWidth, pillY + pr);
+    ctx.lineTo(pillX + pillWidth, pillY + pillHeight - pr);
+    ctx.quadraticCurveTo(pillX + pillWidth, pillY + pillHeight, pillX + pillWidth - pr, pillY + pillHeight);
+    ctx.lineTo(pillX + pr, pillY + pillHeight);
+    ctx.quadraticCurveTo(pillX, pillY + pillHeight, pillX, pillY + pillHeight - pr);
+    ctx.lineTo(pillX, pillY + pr);
+    ctx.quadraticCurveTo(pillX, pillY, pillX + pr, pillY);
+    ctx.closePath();
+
+    ctx.fillStyle = lastResult.correct ? "#16a34a" : "#dc2626";
+    ctx.fill();
+
+    ctx.fillStyle = "#f9fafb";
+    ctx.font = "12px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(pillText, pillX + pillWidth / 2, pillY + pillHeight / 2);
+    ctx.textAlign = "start";
+    ctx.textBaseline = "alphabetic";
+  }
+
+  // Item text
   ctx.fillStyle = "#ecf0f1";
   ctx.font = "16px system-ui";
-  wrapText(item.name, x + 14, y + 24, w - 28, 20);
+  wrapText(item.name, x + 14, y + 26, w - 28, 20);
 }
+
 
 // Simple multi-line text wrapper
 function wrapText(text, x, y, maxWidth, lineHeight) {
@@ -267,15 +330,20 @@ function checkAnswer(zone) {
 
   const niceZoneLabel = zone.label;
   let message;
+  let delta;
 
   if (correctCategory === droppedCategory) {
-    score += 10;
+    delta = 10;
+    score += delta;
     message = `Correct ✔  ${currentItem.name} belongs in "${niceZoneLabel}".`;
+    lastResult = { correct: true, delta };
   } else {
-    score -= 5;
+    delta = -5;
+    score += delta;
     const correctZone = zones.find(z => z.id === correctCategory);
     const correctLabel = correctZone ? correctZone.label : correctCategory;
     message = `Wrong ✖  ${currentItem.name} should be "${correctLabel}", not "${niceZoneLabel}".`;
+    lastResult = { correct: false, delta };
   }
 
   statusText.textContent = message;
@@ -284,6 +352,7 @@ function checkAnswer(zone) {
   // Load next item
   currentItem = createRandomItem();
 }
+
 
 // --- Initialise ---
 function initGame() {
