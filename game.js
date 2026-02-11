@@ -4,6 +4,18 @@
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 
+function resizeCanvasToDisplaySize() {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const displayWidth = Math.round(rect.width * dpr);
+  const displayHeight = Math.round(rect.height * dpr);
+
+  if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+    canvas.width = displayWidth;
+    canvas.height = displayHeight;
+  }
+}
+
 const statusText = document.getElementById("status-text");
 const scoreText = document.getElementById("score-text");
 const levelText = document.getElementById("level-text");
@@ -113,40 +125,40 @@ const zones = [
     id: "cabin",
     label: "Cabin",
     icon: "🛄",
-    x: 40,
-    y: 360,
-    width: 190,
-    height: 100,
+    x: 0.03,
+    y: 0.70,
+    width: 0.22,
+    height: 0.22,
     baseColor: "#e5f9ed"
   },
   {
     id: "hold-only",
     label: "Hold only",
     icon: "📦",
-    x: 260,
-    y: 360,
-    width: 190,
-    height: 100,
+    x: 0.28,
+    y: 0.70,
+    width: 0.22,
+    height: 0.22,
     baseColor: "#fef7e5"
   },
   {
     id: "not-allowed-dangerous",
     label: "Dangerous goods",
     icon: "☢️",
-    x: 480,
-    y: 360,
-    width: 190,
-    height: 100,
+    x: 0.53,
+    y: 0.70,
+    width: 0.22,
+    height: 0.22,
     baseColor: "#fee2e2"
   },
   {
     id: "not-allowed-offensive",
     label: "Offensive weapons",
     icon: "⚔️",
-    x: 700,
-    y: 360,
-    width: 190,
-    height: 100,
+    x: 0.78,
+    y: 0.70,
+    width: 0.22,
+    height: 0.22,
     baseColor: "#ede9fe"
   }
 ];
@@ -156,28 +168,25 @@ function createRandomItem() {
   const pool = ITEMS.filter(item => item.level === currentLevel);
   const effectivePool = pool.length > 0 ? pool : ITEMS;
 
+  // recent-items buffer to reduce repetition
   let itemData;
   let attempts = 0;
-
   do {
-    itemData =
-      effectivePool[Math.floor(Math.random() * effectivePool.length)];
+    itemData = effectivePool[Math.floor(Math.random() * effectivePool.length)];
     attempts += 1;
-    // If pool is small, fall back quickly to avoid infinite loop
     if (attempts > 10 || effectivePool.length <= RECENT_BUFFER_SIZE) break;
   } while (recentItems.includes(itemData.name));
 
-  // update recent buffer
   recentItems.push(itemData.name);
   if (recentItems.length > RECENT_BUFFER_SIZE) {
     recentItems.shift();
   }
 
-  const width = 280;
-  const height = 80;
-  const targetX = (canvas.width - width) / 2;
-  const startY = 180;
-  const startX = -width; // conveyor from left
+  const cardWidth = canvas.width * 0.55;   // 55% of width
+  const cardHeight = canvas.height * 0.18; // 18% of height
+  const targetX = (canvas.width - cardWidth) / 2;
+  const startY = canvas.height * 0.30;
+  const startX = -cardWidth;
 
   itemTargetX = targetX;
 
@@ -189,30 +198,35 @@ function createRandomItem() {
     icon: itemData.icon,
     x: startX,
     y: startY,
-    width,
-    height,
+    width: cardWidth,
+    height: cardHeight,
     color: "#16a085"
   };
 }
+
+
 
 // --- Drawing ---
 function drawBackground() {
   ctx.fillStyle = "#0b1c33";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // conveyor band
+  // conveyor band (middle strip, scaled for mobile)
+  const bandY = canvas.height * 0.30;
+  const bandH = canvas.height * 0.24;
   ctx.fillStyle = "#152a4d";
-  ctx.fillRect(0, 220, canvas.width, 120);
+  ctx.fillRect(0, bandY, canvas.width, bandH);
 }
 
 function drawZones() {
   zones.forEach((zone) => {
+    const w = canvas.width * zone.width;
+    const h = canvas.height * zone.height;
+    const x = canvas.width * zone.x;
+    const y = canvas.height * zone.y;
     const r = 14;
-    const x = zone.x;
-    const y = zone.y;
-    const w = zone.width;
-    const h = zone.height;
 
+    // Tray base (same code as before, but using x,y,w,h)
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.lineTo(x + w - r, y);
@@ -253,6 +267,7 @@ function drawZones() {
     ctx.fillText(zone.label, x + 40, y + 26);
   });
 }
+
 
 function drawItem(item) {
   if (!item) return;
@@ -454,13 +469,14 @@ function handlePointerUp(event) {
   isDragging = false;
   const { x, y } = getCanvasPoint(event);
 
-  const zone = zones.find(
-    (z) =>
-      x >= z.x &&
-      x <= z.x + z.width &&
-      y >= z.y &&
-      y <= z.y + z.height
-  );
+  const zone = zones.find((z) => {
+    const zx = canvas.width * z.x;
+    const zy = canvas.height * z.y;
+    const zw = canvas.width * z.width;
+    const zh = canvas.height * z.height;
+    return x >= zx && x <= zx + zw && y >= zy && y <= zy + zh;
+  });
+
 
   if (zone) {
     checkAnswer(zone);
@@ -653,6 +669,12 @@ level3Button.addEventListener("click", () => {
   currentLevel = 3;
   resetGame();
 });
+
+window.addEventListener("resize", () => {
+  resizeCanvasToDisplaySize();
+});
+
+resizeCanvasToDisplaySize();
 
 updateLevelButtons();
 resetGame();
