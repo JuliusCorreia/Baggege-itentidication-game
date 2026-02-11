@@ -132,6 +132,7 @@ body {
   border: 1px solid rgba(148, 163, 184, 0.6);
   background: radial-gradient(circle at top, #1e293b, #020617 60%);
   display: block;
+  touch-action: none; /* stop browser from treating drags as scroll/zoom */
 }
 
 /* Zones legend – compact chips (if you render them from JS) */
