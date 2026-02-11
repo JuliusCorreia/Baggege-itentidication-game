@@ -24,6 +24,9 @@ let correctDecisions = 0;    // how many correct
 // Game state: "answering" or "feedback"
 let gameState = "answering";
 
+// Animation
+let itemTargetX = null; // where the item wants to be
+let itemSpeed = 0.15;   // how fast it moves (0–1 lerp)
 
 // --- Zones (we'll keep them simple rectangles for now) ---
 // --- Trays (drop zones) ---
@@ -76,8 +79,13 @@ function createRandomItem() {
 
   const width = 280;
   const height = 80;
-  const startX = (canvas.width - width) / 2;
+  const targetX = (canvas.width - width) / 2;
   const startY = 180;
+
+  // Start slightly off the left side (conveyor effect)
+  const startX = -width;
+
+  itemTargetX = targetX;
 
   return {
     name: itemData.name,
@@ -89,6 +97,7 @@ function createRandomItem() {
     color: "#16a085"
   };
 }
+
 
 // --- Drawing functions ---
 function drawBackground() {
@@ -271,6 +280,17 @@ function wrapText(text, x, y, maxWidth, lineHeight) {
 
 // --- Main render loop ---
 function render() {
+  // Move item towards target if in answering state (simple conveyor slide-in)
+  if (gameState === "answering" && currentItem && itemTargetX !== null && !isDragging) {
+    const dx = itemTargetX - currentItem.x;
+    // Only move if not already very close
+    if (Math.abs(dx) > 0.5) {
+      currentItem.x += dx * itemSpeed;
+    } else {
+      currentItem.x = itemTargetX;
+    }
+  }
+
   drawBackground();
   drawZones();
   drawItem(currentItem);
