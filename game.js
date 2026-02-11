@@ -398,8 +398,22 @@ function render() {
 // --- Input handling ---
 function getCanvasPoint(event) {
   const rect = canvas.getBoundingClientRect();
-  const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-  const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+  let clientX, clientY;
+
+  if (event.touches && event.touches.length > 0) {
+    // touchstart / touchmove
+    clientX = event.touches[0].clientX;
+    clientY = event.touches[0].clientY;
+  } else if (event.changedTouches && event.changedTouches.length > 0) {
+    // touchend
+    clientX = event.changedTouches[0].clientX;
+    clientY = event.changedTouches[0].clientY;
+  } else {
+    // mouse events
+    clientX = event.clientX;
+    clientY = event.clientY;
+  }
+
   return {
     x: ((clientX - rect.left) / rect.width) * canvas.width,
     y: ((clientY - rect.top) / rect.height) * canvas.height
