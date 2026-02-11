@@ -209,7 +209,7 @@ function drawItem(item) {
     ctx.closePath();
 
     ctx.lineWidth = 3;
-    ctx.strokeStyle = lastResult.correct ? "#22c55e" : "#ef4444";
+    ctx.strokeStyle = lastResult.correct ? "#16a34a" : "#dc2626";
     ctx.stroke();
     ctx.restore();
 
@@ -233,7 +233,7 @@ function drawItem(item) {
     ctx.quadraticCurveTo(pillX, pillY, pillX + pr, pillY);
     ctx.closePath();
 
-    ctx.fillStyle = lastResult.correct ? "#16a34a" : "#dc2626";
+    ctx.fillStyle = lastResult.correct ? "#16a34a" : "#b91c1c";
     ctx.fill();
 
     ctx.fillStyle = "#f9fafb";
