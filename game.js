@@ -58,14 +58,19 @@ const zones = [
 function createRandomItem() {
   const itemData = ITEMS[Math.floor(Math.random() * ITEMS.length)];
 
+  const width = 280;
+  const height = 80;
+  const startX = (canvas.width - width) / 2;
+  const startY = 180;
+
   return {
     name: itemData.name,
     category: itemData.category,
-    x: 120,          // start position
-    y: 130,
-    width: 220,
-    height: 80,
-    color: "#1abc9c"
+    x: startX,
+    y: startY,
+    width,
+    height,
+    color: "#16a085"
   };
 }
 
