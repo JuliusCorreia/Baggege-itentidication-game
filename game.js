@@ -7,10 +7,16 @@ const ctx = canvas.getContext("2d");
 const statusText = document.getElementById("status-text");
 const scoreText = document.getElementById("score-text");
 const levelText = document.getElementById("level-text");
+const itemsText = document.getElementById("items-text");
+const streakText = document.getElementById("streak-text");
 const nextButton = document.getElementById("next-button");
+const resetButton = document.getElementById("reset-button");
+
 const level1Button = document.getElementById("level1-button");
 const level2Button = document.getElementById("level2-button");
+const level3Button = document.getElementById("level3-button");
 
+// Core state
 let score = 0;
 let currentItem = null;
 let isDragging = false;
@@ -22,13 +28,18 @@ let lastResult = null; // { correct: boolean, delta: number }
 let startTime = null;        // when current item became active
 let totalDecisions = 0;      // how many items answered
 let correctDecisions = 0;    // how many correct
+let currentStreak = 0;
 
 // Levels
-let currentLevel = 1;        // which level is being played
+let currentLevel = 1;         // current level
 let highestUnlockedLevel = 1; // how far the user has progressed
 
 // Game state: "answering" or "feedback"
 let gameState = "answering";
+
+// Simple recent-items buffer to reduce repetition
+const recentItems = [];
+const RECENT_BUFFER_SIZE = 5;
 
 // Per-category stats
 const stats = {
@@ -39,42 +50,41 @@ const stats = {
 };
 
 function updateLevelButtons() {
-  // Reset classes
-  level1Button.classList.remove("level-btn-active", "level-btn-disabled");
-  level2Button.classList.remove("level-btn-active", "level-btn-disabled");
+  // Clear states
+  [level1Button, level2Button, level3Button].forEach(btn => {
+    btn.classList.remove("level-btn-active", "level-btn-disabled");
+  });
 
-  if (currentLevel === 1) {
-    level1Button.classList.add("level-btn-active");
-    level2Button.classList.add(
-      highestUnlockedLevel >= 2 ? "" : "level-btn-disabled"
-    );
-    if (highestUnlockedLevel < 2) {
-      level2Button.classList.add("level-btn-disabled");
-    }
-  } else if (currentLevel === 2) {
-    level2Button.classList.add("level-btn-active");
-    if (highestUnlockedLevel < 2) {
-      level2Button.classList.add("level-btn-disabled");
-    }
-    level1Button.classList.add("level-btn"); // stay clickable
+  // Base enabled/disabled depending on unlock
+  if (highestUnlockedLevel < 2) {
+    level2Button.classList.add("level-btn-disabled");
+  }
+  if (highestUnlockedLevel < 3) {
+    level3Button.classList.add("level-btn-disabled");
   }
 
-  // Update label text
+  // Active level styling
+  if (currentLevel === 1) {
+    level1Button.classList.add("level-btn-active");
+  } else if (currentLevel === 2) {
+    level2Button.classList.add("level-btn-active");
+  } else if (currentLevel === 3) {
+    level3Button.classList.add("level-btn-active");
+  }
+
   levelText.textContent = `Level ${currentLevel}`;
 }
 
-
 // Animation
 let itemTargetX = null; // where the item wants to be
-let itemSpeed = 0.15;   // how fast it moves (0–1 lerp)
+const itemSpeed = 0.15; // how fast it moves (0–1 lerp)
 
-// --- Zones (we'll keep them simple rectangles for now) ---
-// --- Trays (drop zones) ---
+// Trays (drop zones)
 const zones = [
   {
     id: "cabin",
-    label: "Cabin & hold allowed",
-    icon: "🛄",                // placeholder icon
+    label: "Cabin",
+    icon: "🛄",
     x: 40,
     y: 360,
     width: 190,
@@ -94,7 +104,7 @@ const zones = [
   {
     id: "not-allowed-dangerous",
     label: "Dangerous goods",
-    icon: "☢",
+    icon: "☢️",
     x: 480,
     y: 360,
     width: 190,
@@ -104,7 +114,7 @@ const zones = [
   {
     id: "not-allowed-offensive",
     label: "Offensive weapons",
-    icon: "⚠",
+    icon: "⚔️",
     x: 700,
     y: 360,
     width: 190,
@@ -113,23 +123,33 @@ const zones = [
   }
 ];
 
-// --- Simple item representation for now ---
+// --- Random item selection with recent buffer ---
 function createRandomItem() {
-  // Filter items by current level
   const pool = ITEMS.filter(item => item.level === currentLevel);
-
-  // Safety fallback: if no items for this level, use all items
   const effectivePool = pool.length > 0 ? pool : ITEMS;
 
-  const itemData = effectivePool[Math.floor(Math.random() * effectivePool.length)];
+  let itemData;
+  let attempts = 0;
+
+  do {
+    itemData =
+      effectivePool[Math.floor(Math.random() * effectivePool.length)];
+    attempts += 1;
+    // If pool is small, fall back quickly to avoid infinite loop
+    if (attempts > 10 || effectivePool.length <= RECENT_BUFFER_SIZE) break;
+  } while (recentItems.includes(itemData.name));
+
+  // update recent buffer
+  recentItems.push(itemData.name);
+  if (recentItems.length > RECENT_BUFFER_SIZE) {
+    recentItems.shift();
+  }
 
   const width = 280;
   const height = 80;
   const targetX = (canvas.width - width) / 2;
   const startY = 180;
-
-  // Start slightly off the left side (conveyor effect)
-  const startX = -width;
+  const startX = -width; // conveyor from left
 
   itemTargetX = targetX;
 
@@ -147,26 +167,24 @@ function createRandomItem() {
   };
 }
 
-// --- Drawing functions ---
+// --- Drawing ---
 function drawBackground() {
   ctx.fillStyle = "#0b1c33";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // conveyor band hint
+  // conveyor band
   ctx.fillStyle = "#152a4d";
   ctx.fillRect(0, 220, canvas.width, 120);
 }
 
 function drawZones() {
   zones.forEach((zone) => {
-    // Tray base
     const r = 14;
     const x = zone.x;
     const y = zone.y;
     const w = zone.width;
     const h = zone.height;
 
-    // Tray fill
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.lineTo(x + w - r, y);
@@ -182,7 +200,6 @@ function drawZones() {
     ctx.fillStyle = zone.baseColor;
     ctx.fill();
 
-    // Outer shadow
     ctx.shadowColor = "rgba(15, 23, 42, 0.35)";
     ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 4;
@@ -192,7 +209,6 @@ function drawZones() {
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
 
-    // Inner lip (like a tray edge)
     ctx.beginPath();
     ctx.moveTo(x + 4, y + 6);
     ctx.lineTo(x + w - 4, y + 6);
@@ -200,7 +216,6 @@ function drawZones() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Icon + label
     ctx.fillStyle = "#0f172a";
     ctx.font = "18px system-ui";
     ctx.fillText(zone.icon, x + 10, y + 28);
@@ -220,7 +235,6 @@ function drawItem(item) {
   const w = item.width;
   const h = item.height;
 
-  // Item background
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
@@ -236,12 +250,10 @@ function drawItem(item) {
   ctx.fillStyle = item.color;
   ctx.fill();
 
-  // Base outline
   ctx.strokeStyle = "rgba(15, 23, 42, 0.6)";
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Correct / wrong highlight
   if (lastResult) {
     ctx.save();
     ctx.beginPath();
@@ -261,7 +273,6 @@ function drawItem(item) {
     ctx.stroke();
     ctx.restore();
 
-    // Score change pill
     const pillText = (lastResult.delta > 0 ? "+" : "") + String(lastResult.delta);
     const pillWidth = 40;
     const pillHeight = 20;
@@ -274,9 +285,19 @@ function drawItem(item) {
     ctx.lineTo(pillX + pillWidth - pr, pillY);
     ctx.quadraticCurveTo(pillX + pillWidth, pillY, pillX + pillWidth, pillY + pr);
     ctx.lineTo(pillX + pillWidth, pillY + pillHeight - pr);
-    ctx.quadraticCurveTo(pillX + pillWidth, pillY + pillHeight, pillX + pillWidth - pr, pillY + pillHeight);
+    ctx.quadraticCurveTo(
+      pillX + pillWidth,
+      pillY + pillHeight,
+      pillX + pillWidth - pr,
+      pillY + pillHeight
+    );
     ctx.lineTo(pillX + pr, pillY + pillHeight);
-    ctx.quadraticCurveTo(pillX, pillY + pillHeight, pillX, pillY + pillHeight - pr);
+    ctx.quadraticCurveTo(
+      pillX,
+      pillY + pillHeight,
+      pillX,
+      pillY + pillHeight - pr
+    );
     ctx.lineTo(pillX, pillY + pr);
     ctx.quadraticCurveTo(pillX, pillY, pillX + pr, pillY);
     ctx.closePath();
@@ -293,20 +314,17 @@ function drawItem(item) {
     ctx.textBaseline = "alphabetic";
   }
 
-  // Icon (if present)
   if (item.icon) {
     ctx.fillStyle = "#f9fafb";
     ctx.font = "22px system-ui";
     ctx.fillText(item.icon, x + 14, y + 30);
   }
 
-  // Item text: name
   const textStartX = item.icon ? x + 50 : x + 14;
   ctx.fillStyle = "#ecf0f1";
   ctx.font = "16px system-ui";
   wrapText(item.name, textStartX, y + 26, w - (textStartX - x) - 14, 20);
 
-  // Item text: hazard type (smaller, secondary)
   if (item.hazardType) {
     ctx.fillStyle = "rgba(226, 232, 240, 0.9)";
     ctx.font = "12px system-ui";
@@ -314,7 +332,6 @@ function drawItem(item) {
   }
 }
 
-// Simple multi-line text wrapper
 function wrapText(text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
   let line = "";
@@ -335,10 +352,8 @@ function wrapText(text, x, y, maxWidth, lineHeight) {
 
 // --- Main render loop ---
 function render() {
-  // Move item towards target if in answering state (simple conveyor slide-in)
   if (gameState === "answering" && currentItem && itemTargetX !== null && !isDragging) {
     const dx = itemTargetX - currentItem.x;
-    // Only move if not already very close
     if (Math.abs(dx) > 0.5) {
       currentItem.x += dx * itemSpeed;
     } else {
@@ -397,7 +412,6 @@ function handlePointerUp(event) {
   isDragging = false;
   const { x, y } = getCanvasPoint(event);
 
-  // Did we drop inside any zone?
   const zone = zones.find(
     (z) =>
       x >= z.x &&
@@ -409,7 +423,11 @@ function handlePointerUp(event) {
   if (zone) {
     checkAnswer(zone);
   } else {
-    statusText.textContent = "Drop the item into one of the zones.";
+    statusText.textContent = "Time: 0.0s  •  Accuracy: " +
+      (totalDecisions === 0
+        ? 0
+        : Math.round((correctDecisions / totalDecisions) * 100)) +
+      "%  •  Drop the item into one of the zones.";
   }
   event.preventDefault();
 }
@@ -432,18 +450,17 @@ function checkAnswer(zone) {
     score += delta;
     wasCorrect = true;
     correctDecisions += 1;
+    currentStreak += 1;
   } else {
     delta = -5;
     score += delta;
     wasCorrect = false;
+    currentStreak = 0;
   }
 
-  // Update per-category stats (by true category)
   if (stats[correctCategory]) {
     stats[correctCategory].total += 1;
-    if (wasCorrect) {
-      stats[correctCategory].correct += 1;
-    }
+    if (wasCorrect) stats[correctCategory].correct += 1;
   }
 
   totalDecisions += 1;
@@ -451,115 +468,126 @@ function checkAnswer(zone) {
     ? 0
     : Math.round((correctDecisions / totalDecisions) * 100);
 
-
-  // Graduation rule: unlock Level 2 when performance is good enough
+  // Graduation rules
+  // Unlock Level 2 from Level 1
   if (currentLevel === 1 && highestUnlockedLevel === 1) {
     const minDecisions = 20;
     const minAccuracy = 80;
     if (totalDecisions >= minDecisions && accuracy >= minAccuracy) {
       highestUnlockedLevel = 2;
-      currentLevel = 2;
-      updateLevelButtons();
+    }
+  }
+  // Unlock Level 3 from Level 2
+  if (currentLevel === 2 && highestUnlockedLevel === 2) {
+    const minDecisions2 = 30;
+    const minAccuracy2 = 85;
+    if (totalDecisions >= minDecisions2 && accuracy >= minAccuracy2) {
+      highestUnlockedLevel = 3;
     }
   }
 
-  // Store result for drawing outline + pill on THIS item
+  updateLevelButtons();
+
   lastResult = { correct: wasCorrect, delta };
 
-  // TOP BAR shows time + accuracy
   const timeText = `Time: ${timeTakenSeconds.toFixed(1)}s`;
   const accuracyText = `Accuracy: ${accuracy}%`;
 
-  // Per-category accuracy (simple, integer %)
   function pct(cat) {
     const s = stats[cat];
     if (!s || s.total === 0) return 0;
     return Math.round((s.correct / s.total) * 100);
   }
 
-  const catSummary = `Cabin ${pct("cabin")}% · Hold ${pct("hold-only")}% · Dangerous ${pct("not-allowed-dangerous")}% · Offensive ${pct("not-allowed-offensive")}%`;
+  const catSummary =
+    `Cabin ${pct("cabin")}% · Hold ${pct("hold-only")}% · ` +
+    `Dangerous ${pct("not-allowed-dangerous")}% · Offensive ${pct("not-allowed-offensive")}%`;
 
   statusText.textContent = `${timeText}  •  ${accuracyText}  •  ${catSummary}`;
-
   scoreText.textContent = `Score: ${score}`;
+  itemsText.textContent = `Items: ${totalDecisions}`;
+  streakText.textContent = `Streak: ${currentStreak}`;
 
-  // Switch to feedback state: item locked, show pill/outline, wait for Next
   gameState = "feedback";
   nextButton.disabled = false;
-
 }
+
+// Next item
 function goToNextItem() {
   if (gameState !== "feedback") return;
 
-  // Clear last result so pill/outline disappears on new item
   lastResult = null;
 
-  // Spawn next item and reset timer
   currentItem = createRandomItem();
   startTime = performance.now();
   gameState = "answering";
   nextButton.disabled = true;
 
-  // Reset time display (accuracy remains)
-  statusText.textContent = `Time: 0.0s  •  Accuracy: ${
-    totalDecisions === 0
-      ? 0
-      : Math.round((correctDecisions / totalDecisions) * 100)
-  }%`;
+  const accuracy = totalDecisions === 0
+    ? 0
+    : Math.round((correctDecisions / totalDecisions) * 100);
+
+  statusText.textContent = `Time: 0.0s  •  Accuracy: ${accuracy}%`;
 }
 
-// --- Initialise ---
-function initGame() {
+// Reset game
+function resetGame() {
   score = 0;
   totalDecisions = 0;
   correctDecisions = 0;
+  currentStreak = 0;
   lastResult = null;
   gameState = "answering";
 
-  // Reset per-category stats
-  stats.cabin.correct = 0; stats.cabin.total = 0;
-  stats["hold-only"].correct = 0; stats["hold-only"].total = 0;
-  stats["not-allowed-dangerous"].correct = 0; stats["not-allowed-dangerous"].total = 0;
-  stats["not-allowed-offensive"].correct = 0; stats["not-allowed-offensive"].total = 0;
+  Object.keys(stats).forEach(cat => {
+    stats[cat].correct = 0;
+    stats[cat].total = 0;
+  });
 
-   updateLevelButtons();
+  itemsText.textContent = "Items: 0";
+  streakText.textContent = "Streak: 0";
+
+  updateLevelButtons();
 
   currentItem = createRandomItem();
-  startTime = performance.now(); // start timer for first item
+  startTime = performance.now();
 
-  statusText.textContent = `Time: 0.0s  •  Accuracy: 0%`;
+  statusText.textContent = "Time: 0.0s  •  Accuracy: 0%";
   scoreText.textContent = `Score: ${score}`;
-  nextButton.disabled = true; // can't go next until you answer
+  nextButton.disabled = true;
 }
 
+// --- Initialise ---
 canvas.addEventListener("mousedown", handlePointerDown);
 canvas.addEventListener("mousemove", handlePointerMove);
 canvas.addEventListener("mouseup", handlePointerUp);
 canvas.addEventListener("mouseleave", handlePointerUp);
 
-// Touch support
 canvas.addEventListener("touchstart", handlePointerDown, { passive: false });
 canvas.addEventListener("touchmove", handlePointerMove, { passive: false });
 canvas.addEventListener("touchend", handlePointerUp, { passive: false });
+
 nextButton.addEventListener("click", goToNextItem);
+resetButton.addEventListener("click", resetGame);
 
 level1Button.addEventListener("click", () => {
-  if (currentLevel === 1 || gameState !== "answering") return;
+  if (gameState !== "answering") return;
   currentLevel = 1;
-  updateLevelButtons();
-  // Restart with Level 1 items
-  initGame();
+  resetGame();
 });
 
 level2Button.addEventListener("click", () => {
-  if (highestUnlockedLevel < 2) return; // not unlocked yet
-  if (currentLevel === 2 || gameState !== "answering") return;
+  if (highestUnlockedLevel < 2 || gameState !== "answering") return;
   currentLevel = 2;
-  updateLevelButtons();
-  // Restart with Level 2 items
-  initGame();
+  resetGame();
 });
 
+level3Button.addEventListener("click", () => {
+  if (highestUnlockedLevel < 3 || gameState !== "answering") return;
+  currentLevel = 3;
+  resetGame();
+});
 
-initGame();
+updateLevelButtons();
+resetGame();
 render();
